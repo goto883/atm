@@ -224,10 +224,92 @@ const COUNTMAX = 3;
 ・バリデーションの返り値をtrue,falseに修正
 
 
+20200712
+githubにあげていただきましたね＾＾
+$error =true;
+$errorという変数名だと、エラーメッセージが代入されているように思うので、
+変数名としては、少し不自然かなと思いました。
+一般的には、$check, $is_valid のような変数名がよろしいかなと思います。
+
+次は、バリデーションクラスをインスタンス化して、
+もしバリデーションチェックがNGだったら
+バリデーションクラスからエラーメッセージを取得して、
+ATMクラス内で出力してみたいです。
+なので、
+今度は、staticではないメソッドにしていただいて、
+エラーメッセージをプロパティで管理するようにしていただいて、
+バリデーションチェックがNGだったらエラーメッセージをプロパティに格納
+エラーメッセージを取得できるメソッドを用意していただき、
+そのメソッドを通してエラーメッセージを取得して、
+ATMクラスで出力してみてください。
+
+修正箇所
+・$errorの変数名を$checkに変更
+・残高が0円になるまで引き出しができていませんでした。
+    MenuValidationのsetPayTransferValidationないにあるy_transfer ,$money){
+        //残高があるか？
+        elseif($money < $set_pay_transfer){
+            $check = false;
+        }
+        残高チェックを<= から　<　に修正しました。
+・バリデーションクラスのインスタンス化
+・エラ〜メッセージの取得
+
+20200717
+github を直接修正されたのですね！
+せっかくなのでなるべく、ローカル編集→コミット→プッシュの手順でいきましょうか。
+sourcetreeを使用していただいているなら、sourcetreeを使用してもOKです。
+git のコマンドも最低限、使用できると、さらにベターかと思います。
+基本的な流れとしては
+//ブランチ確認
+git branch
+//差分確認
+git status
+//変更箇所確認
+git diff ファイル名
+//ステージング
+git add ファイル名
+//コミット
+git commit -m "コミットメッセージ"
+//コミットログ
+git log -1
+//リモートリポジトリにプッシュ
+git push
+このあたりは、どの現場でも共通かと思うので
+今のうちから学習し、
+機会があれば、少しずつ現場でも使用するようにしてみてください。
+現場だと、失敗できないので、なかなか挑戦できないかと思うのですが
+プライベートだと、もし失敗しても作り直せばいいだけなので、問題ないはずです。
+gitはプライベートでたくさん触るほどなれるものかと思いますので
+ぜひトライしてみてください＾＾
+
+バリデーションクラスのエラーメッセージですが
+//エラーメッセージ保持
+public $error;
+カプセル化にしてみましょうか。
+
+また、エラーメッセージは複数格納できるようにしたいので、
+文字列ではなく、配列にしてみましょう。
+エラーメッセージの取得方法は、
+getErrorMessagesのようなメソッドを通して返すようにしてみましょうか。
+
+それができたら
+バリデーションクラスの親クラスを作成してみましょう。
+BaseValidation.php というようなクラスを作成し、
+すべてのバリデーションメソッドはこのクラスを継承
+共通して使用するgetErrorMessagesメソッドは、
+この親クラスに移行するイメージです。
+
+修正箇所
+・LoginValidation,MenuValidationの$errorをカプセル化
+・$errorを配列に変更し、getErrorMessagesよりエラー値を取得するメソッドの作成
+
+・BaseValidation.phpを作成
+
 */
 
-require_once 'validation/MenuValidation_2.php';
-require_once 'validation/LoginValidation_2.php';
+require_once 'validation/MenuValidation.php';
+require_once 'validation/LoginValidation.php';
 
 
 //ATMの機能
@@ -322,9 +404,10 @@ class Atm{
     //-------------------
     public function idCheckStart(){
         $id = $this->idProcess();
-        $id_check = LoginValidation::idValidation($id);
+        $check = new LoginValidation;
+        $id_check = $check->idValidation($id);
         if(!$id_check){
-            echo ERROR . PHP_EOL;
+            echo $check->getErrorMessages() . PHP_EOL;
             return $this->idCheckStart();
         }
         return $id;
@@ -338,16 +421,17 @@ class Atm{
 
     public function passWordCheckStart($id){
         $password = $this->passWordProcess($id);
-        $password_check = LoginValidation::passwordValidation($id,$password);
+        $check = new LoginValidation;
+        $password_check = $check->passwordValidation($id,$password);
         //3回入力間違いした場合終了する
-        if($this->count <= COUNTMIN){
+        if($this->count === COUNTMAX){
+            exit('3回パスワードを間違えたので終了します。');
+        }elseif($this->count <= COUNTMIN){  
             if(!$password_check){
                 $this->count++;
-                echo ERROR . '3回まで入力可能' . $this->count . '回目' . PHP_EOL;
+                echo $check->getErrorMessages() . '3回まで入力可能' . $this->count . '回目' . PHP_EOL;
                 return $this->passWordCheckStart($id);
             }
-        }elseif($this->count === COUNTMAX){
-            exit('3回パスワードを間違えたので終了します。');
         }
     } 
     public function passWordProcess($id){
@@ -364,9 +448,10 @@ class Atm{
         //入力処理
         $process = $this->Process();
         //入力チェックバリデーション
-        $process_check = MenuValidation::processValidation($process);
+        $check = new MenuValidation;
+        $process_check = $check->processValidation($process);
         if(!$process_check){
-            echo ERROR . PHP_EOL;
+            echo $check->getErrorMessages() . PHP_EOL;
             return $this->bankTransactionStart();
         }
         return $process;
@@ -400,9 +485,10 @@ class Atm{
         //処理内容取得
         $set_pay_ment = trim(fgets(STDIN));
         //半角数字で入力されているかチェック
-        $set_pay_ment_check = MenuValidation::spayMentValidation($set_pay_ment);
+        $check = new MenuValidation;
+        $set_pay_ment_check = $check->spayMentValidation($set_pay_ment);
         if(!$set_pay_ment_check){
-            echo ERROR . PHP_EOL;
+            echo $check->getErrorMessages() . PHP_EOL;
             return $this->payMent($money);
         }
         //入金処理
@@ -418,9 +504,10 @@ class Atm{
         //処理内容取得
         $set_pay_transfer = trim(fgets(STDIN));
         //半角数字で入力されているかかつ残高より引き出す金額が多く無いかチェック
-        $set_pay_transfer_check = MenuValidation::setPayTransferValidation($set_pay_transfer ,$money);
+        $check = new MenuValidation;
+        $set_pay_transfer_check = $check->setPayTransferValidation($set_pay_transfer ,$money);
         if(!$set_pay_transfer_check){
-            echo ERROR . PHP_EOL;
+            echo $check->getErrorMessages() . PHP_EOL;
             return $this->payTransfer($money);
         }
         $this->user['balance'] = $money - $set_pay_transfer;
@@ -434,9 +521,10 @@ class Atm{
     //---------
     public function reProcessStart(){
         $re_process = $this->reProcess();
-        $re_process_check = MenuValidation::reProcessValidation($re_process);
+        $check = new MenuValidation;
+        $re_process_check = $check->reProcessValidation($re_process);
         if(!$re_process_check){
-            echo ERROR . PHP_EOL;
+            echo $check->getErrorMessages() . PHP_EOL;
             return $this->reProcessStart($this->user['balance']);
         }
         return $re_process;
