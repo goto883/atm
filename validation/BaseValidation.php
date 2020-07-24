@@ -4,7 +4,6 @@
 //$errorの定義
 //getメソッドの定義
 
-
 class BaseValidation
 {
     //エラーメッセージ保持

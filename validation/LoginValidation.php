@@ -1,8 +1,5 @@
 <?php
 
-//ここの$errorメッセージの項目修正中
-//true,falseのチェック項目の確認
-
 // require_once 'validation/BaseValidation.php';
 require_once 'BaseValidation.php';
 
