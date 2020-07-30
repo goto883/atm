@@ -99,6 +99,13 @@ class Atm{
         $this->checkReProcess($re_process);
     }
 
+    //エラー複数表示
+    public function displayError($error){
+        for($i=0;$i<count($error);$i++){
+            echo $error[$i] . PHP_EOL;
+        }
+    }
+
     //-------------------
     //ログインのメニュー項目
     //-------------------
@@ -107,7 +114,7 @@ class Atm{
         $check = new LoginValidation;
         $id_check = $check->idValidation($id);
         if(!$id_check){
-            echo $check->getErrorMessages() . PHP_EOL;
+            $this->displayError($check->getErrorMessages());
             return $this->idCheckStart();
         }
         return $id;
@@ -129,7 +136,8 @@ class Atm{
         }elseif($this->count <= COUNTMIN){  
             if(!$password_check){
                 $this->count++;
-                echo $check->getErrorMessages() . '3回まで入力可能' . $this->count . '回目' . PHP_EOL;
+                $this->displayError($check->getErrorMessages());
+                echo '3回まで入力可能' . $this->count . '回目' . PHP_EOL;
                 return $this->passWordCheckStart($id);
             }
         }
@@ -151,7 +159,7 @@ class Atm{
         $check = new MenuValidation;
         $process_check = $check->processValidation($process);
         if(!$process_check){
-            echo $check->getErrorMessages() . PHP_EOL;
+            $this->displayError($check->getErrorMessages());
             return $this->bankTransactionStart();
         }
         return $process;
@@ -188,7 +196,7 @@ class Atm{
         $check = new MenuValidation;
         $set_pay_ment_check = $check->spayMentValidation($set_pay_ment);
         if(!$set_pay_ment_check){
-            echo $check->getErrorMessages() . PHP_EOL;
+            $this->displayError($check->getErrorMessages());
             return $this->payMent($money);
         }
         //入金処理
@@ -207,7 +215,7 @@ class Atm{
         $check = new MenuValidation;
         $set_pay_transfer_check = $check->setPayTransferValidation($set_pay_transfer ,$money);
         if(!$set_pay_transfer_check){
-            echo $check->getErrorMessages() . PHP_EOL;
+            $this->displayError($check->getErrorMessages());
             return $this->payTransfer($money);
         }
         $this->user['balance'] = $money - $set_pay_transfer;
@@ -224,7 +232,7 @@ class Atm{
         $check = new MenuValidation;
         $re_process_check = $check->reProcessValidation($re_process);
         if(!$re_process_check){
-            echo $check->getErrorMessages() . PHP_EOL;
+            $this->displayError($check->getErrorMessages());
             return $this->reProcessStart($this->user['balance']);
         }
         return $re_process;

@@ -32,11 +32,11 @@ class LoginValidation extends BaseValidation
 
         //未入力
         if(empty($id)){
-            $this->error = ERRORLOGIN[NOTSET];
+            $this->error[] = ERRORLOGIN[NOTSET];
         }
         //半角数字
-        elseif(!(preg_match("/^[0-9]+$/",$id))){
-            $this->error = ERRORLOGIN[HALFSIZEALL];
+        if(!(preg_match("/^[0-9]+$/",$id))){
+            $this->error[] = ERRORLOGIN[HALFSIZEALL];
         }
         //$idが$userの中にあるか？
         for($i=1;$i<=count(User::$user_list);$i++){
@@ -46,7 +46,7 @@ class LoginValidation extends BaseValidation
             }
         }
         if(empty($this->error)){
-            $this->error = ERRORLOGIN[NOTID];
+            $this->error[] = ERRORLOGIN[NOTID];
         }
         return $check;
     }
@@ -58,11 +58,11 @@ class LoginValidation extends BaseValidation
 
         //未入力
         if(empty($password)){
-            $this->error = ERRORLOGIN[NOTSET];
+            $this->error[] = ERRORLOGIN[NOTSET];
         }
         //半角数字
-        elseif(!(preg_match("/^[0-9]+$/",$password))){
-            $this->error = ERRORLOGIN[HALFSIZEALL];
+        if(!(preg_match("/^[0-9]+$/",$password))){
+            $this->error[] = ERRORLOGIN[HALFSIZEALL];
         }
         //$idの$passwordが$userの中にあるか？
         for($i=1;$i<=count(User::$user_list);$i++){
@@ -74,7 +74,7 @@ class LoginValidation extends BaseValidation
             }
         }
         if(empty($this->error)){
-            $this->error = ERRORLOGIN[NOTPASSWORD];
+            $this->error[] = ERRORLOGIN[NOTPASSWORD];
         }
         return $check;
     }
